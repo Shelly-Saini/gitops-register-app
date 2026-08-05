@@ -19,7 +19,7 @@ spec:
     spec:
       containers:
       - name: register-app
-        image: shelly1230897/register-app:1.0.0-9
+        image: shelly1230897/register-app:1.0.0-14
         imagePullPolicy: Always
 
         ports:
