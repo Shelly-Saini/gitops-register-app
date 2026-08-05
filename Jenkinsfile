@@ -24,7 +24,10 @@ pipeline {
         stage('Update Deployment Manifest') {
             steps {
                 sh """
+                cat deployment.yaml
+
                 sed -i 's#image: .*#image: shelly1230897/${APP_NAME}:${IMAGE_TAG}#g' deployment.yaml
+
                 cat deployment.yaml
                 """
             }
