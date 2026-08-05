@@ -1,55 +1,59 @@
 pipeline {
-    agent { label "Jenkins-Agent" }
+    agent { label 'Jenkins-Agent' }
 
     environment {
-        APP_NAME = "register-app-pipeline"
+        APP_NAME = "register-app"
     }
 
     stages {
 
-        stage("Cleanup Workspace") {
+        stage('Cleanup Workspace') {
             steps {
                 cleanWs()
             }
         }
 
-        stage("Checkout from SCM") {
+        stage('Checkout GitOps Repository') {
             steps {
                 git branch: 'main',
                     credentialsId: 'github',
-                    url: 'https://github.com/Shelly-Saini/gitops-register-app'
+                    url: 'https://github.com/Shelly-Saini/gitops-register-app.git'
             }
         }
 
-        stage("Update the Deployment Tags") {
+        stage('Update Deployment Manifest') {
             steps {
-                sh '''
-                    echo "Deployment Manifest Before Update"
-                    cat deployment.yaml
-
-                    sed -i "s|${APP_NAME}:.*|${APP_NAME}:${IMAGE_TAG}|g" deployment.yaml
-
-                    echo "Deployment Manifest After Update"
-                    cat deployment.yaml
-                '''
+                sh """
+                sed -i 's#image: .*#image: shelly1230897/${APP_NAME}:${IMAGE_TAG}#g' deployment.yaml
+                cat deployment.yaml
+                """
             }
         }
 
-        stage("Push Updated Deployment Manifest") {
+        stage('Commit Changes') {
             steps {
-                sh '''
-                    git config --global user.name "Shelly-Saini"
-                    git config --global user.email "shellysaini445@gmail.com"
+                sh """
+                git config --global user.name "Shelly-Saini"
+                git config --global user.email "shellysaini445@gmail.com"
 
-                    git add deployment.yaml
+                git add deployment.yaml
+                git commit -m "Updated Deployment Manifest" || true
+                """
+            }
+        }
 
-                    git commit -m "Updated Deployment Manifest" || true
-                '''
-
+        stage('Push Changes') {
+            steps {
                 withCredentials([gitUsernamePassword(credentialsId: 'github', gitToolName: 'Default')]) {
-                    sh 'git push https://github.com/Shelly-Saini/gitops-register-app main'
+                    sh "git push origin main"
                 }
             }
+        }
+    }
+
+    post {
+        always {
+            cleanWs()
         }
     }
 }
